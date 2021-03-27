@@ -6,10 +6,12 @@ import numpy as np
 
 
 class Node():
-    def __init__(self, prev=None, prev_weight=None, next=None):
+    def __init__(self, val=None, prev=None, prev_weight=None, next=None, bias=None):
+        self.val = val
         self.prev = prev
         self.prev_weight = prev_weight
         self.next = next
+        self.bias = bias
 
 
 class Layer():
@@ -24,7 +26,22 @@ class Layer():
                 newNode.prev_weight = []
             if newNode.next == None:
                 newNode.next = []
+            if newNode.bias == None:
+                newNode.bias = 0
             self.neurons.add(newNode)
+
+    def forward(self, inputs):
+        # saving the input values
+        self.inputs = inputs
+
+        # calculate new neuron value
+        temp_vals = []
+        for neuron in self.neurons:
+            for prevNeuron in neuron.prev:
+                temp_vals.append(prevNeuron.val)
+            neuron.val = max(
+                np.dot(neuron.prev_weight, temp_vals) + neuron.bias, 0)
+            temp_vals = []
 
 
 class Network():
@@ -43,52 +60,41 @@ class Network():
             for j in self.layers_deep[0].neurons:
                 i.next.append(j)
                 j.prev.append(i)
+                j.prev_weight.append(0.01 * np.random.randn())
         # connecting the deep layers together
         for i in range(n_layers-1):
             for neuron1 in self.layers_deep[i].neurons:
                 for neuron2 in self.layers_deep[i+1].neurons:
                     neuron1.next.append(neuron2)
                     neuron2.prev.append(neuron1)
+                    neuron2.prev_weight.append(0.01 * np.random.randn())
 
         # connecting the final deep layer to the output layer
         for neuron in self.layers_deep[n_layers-1].neurons:
             for outputNeuron in self.outputs.neurons:
                 neuron.next.append(outputNeuron)
                 outputNeuron.prev.append(neuron)
+                outputNeuron.prev_weight.append(0.01 * np.random.randn())
 
-
-# def run(input1, input2, input3):
-#     I1 = Node()
-#     I2 = Node()
-#     I3 = Node()
-#     F1 = Node()
-#     layer1 = []
-#     for i in range(15):
-#         layer1.append(Node())
-#         layer1[i].prev.append(I1)
-#         layer1[i].prev.append(I2)
-#         layer1[i].prev.append(I3)
-#         I1.next.append(layer1[i])
-#         I2.next.append(layer1[i])
-#         I3.next.append(layer1[i])
-#         layer1[i].prev_weight = 0.1 * np.random.randn(3, 1)
-#         F1.prev.append(layer1[i])
-#         layer1[i].next.append(F1)
-#     return (I1, I2, I3, F1, layer1)
-    # print(layer1)
+    def forward(self, inputs)
 
 
 def main():
     pass
+    a = Layer(5)
+    # for neuron in a.neurons:
+    #     print(neuron.val)
+    b = Network(3, 3, 10, 3)
+    for neuron in b.inputs.neurons:
+        neuron.val = 5
+    for layer in b.layers_deep:
+        layer.forward(1)
+    for neuron in b.layers_deep[-1].neurons:
+        print(neuron.val)
 
 
 if __name__ == '__main__':
-    # print(Node().next)
     pass
-    # print(Layer(5).neurons)
-    Network(3, 3, 10, 3)
-    # A = Node()
-    # B = Node()
-    # A.next.append(1)
-    # print(B.next)
-    # print(Network(3, 3, 10, 3).inputs.neurons[0].next)
+    # Network(3, 3, 10, 3)
+    # print(np.random.randn())
+    main()
