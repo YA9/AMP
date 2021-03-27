@@ -17,7 +17,7 @@ class Node():
 class Layer():
     def __init__(self, length):
         self.length = length
-        self.neurons = set()
+        self.neurons = []
         for i in range(length):
             newNode = Node()
             if newNode.prev == None:
@@ -28,12 +28,9 @@ class Layer():
                 newNode.next = []
             if newNode.bias == None:
                 newNode.bias = 0
-            self.neurons.add(newNode)
+            self.neurons.append(newNode)
 
-    def forward(self, inputs):
-        # saving the input values
-        self.inputs = inputs
-
+    def forward(self):
         # calculate new neuron value
         temp_vals = []
         for neuron in self.neurons:
@@ -76,7 +73,11 @@ class Network():
                 outputNeuron.prev.append(neuron)
                 outputNeuron.prev_weight.append(0.01 * np.random.randn())
 
-    def forward(self, inputs)
+    def forward(self, inputs):
+        for idx, value in enumerate(inputs):
+            self.inputs.neurons[idx].val = value
+        for layer in self.layers_deep:
+            layer.forward()
 
 
 def main():
@@ -85,10 +86,11 @@ def main():
     # for neuron in a.neurons:
     #     print(neuron.val)
     b = Network(3, 3, 10, 3)
-    for neuron in b.inputs.neurons:
-        neuron.val = 5
-    for layer in b.layers_deep:
-        layer.forward(1)
+    # for neuron in b.inputs.neurons:
+    #     neuron.val = 5
+    # for layer in b.layers_deep:
+    #     layer.forward(1)
+    b.forward([1, 2, 3])
     for neuron in b.layers_deep[-1].neurons:
         print(neuron.val)
 
