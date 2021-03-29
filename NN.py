@@ -30,15 +30,39 @@ class Layer():
                 newNode.bias = 0
             self.neurons.append(newNode)
 
-    def forward(self):
+    def forward_relu(self):
         # calculate new neuron value
         temp_vals = []
         for neuron in self.neurons:
             for prevNeuron in neuron.prev:
                 temp_vals.append(prevNeuron.val)
+
+            # ReLU activation function in forward pass
             neuron.val = max(
                 np.dot(neuron.prev_weight, temp_vals) + neuron.bias, 0)
             temp_vals = []
+
+    def forward_softmax(self):
+        temp_vals_per_neuron = []
+        temp_vals_all_neurons = []
+        for neuron in self.neurons:
+            for prevNeuron in neuron.prev:
+                temp_vals_per_neuron.append(prevNeuron.val)
+
+            temp_vals_all_neurons.append(
+                np.dot(neuron.prev_weight, temp_vals_per_neuron) + neuron.bias)
+            temp_vals_per_neuron = []
+
+        # softmax activation funcion in forward pass
+        exp_values = np.exp(temp_vals_all_neurons -
+                            np.max(temp_vals_all_neurons, axis=0, keepdims=True))
+        # normalize exp_values
+        exp_values_norm = exp_values / \
+            np.sum(exp_values, axis=0, keepdims=True)
+        # setting neuron values to softmax output
+
+        for idx, neuron in enumerate(self.neurons):
+            neuron.val = exp_values_norm[idx]
 
 
 class Network():
@@ -77,7 +101,8 @@ class Network():
         for idx, value in enumerate(inputs):
             self.inputs.neurons[idx].val = value
         for layer in self.layers_deep:
-            layer.forward()
+            layer.forward_relu()
+        self.outputs.forward_softmax()
 
 
 def main():
@@ -91,7 +116,7 @@ def main():
     # for layer in b.layers_deep:
     #     layer.forward(1)
     b.forward([1, 2, 3])
-    for neuron in b.layers_deep[-1].neurons:
+    for neuron in b.outputs.neurons:
         print(neuron.val)
 
 
