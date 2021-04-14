@@ -79,7 +79,7 @@ class Network():
         self.n_layers_len = n_layers_len
         self.n_outputs = n_outputs
 
-        G = nx.Graph()
+        # G = nx.Graph()
         self.nodes = []
         # creating input layer
         self.inputs = Layer(n_inputs, activation_function="relu")
@@ -92,15 +92,15 @@ class Network():
         self.outputs = Layer(n_outputs, activation_function="softmax")
 
         # connecting the input to the first deep layer
-        nodes = []
+        # nodes = []
         for i in self.inputs.neurons:
             for j in self.layers_deep[0].neurons:
                 i.next.append(j)
                 j.prev.append(i)
                 j.prev_weight.append(0.01 * abs(np.random.randn()))
-                G.add_edge(i, j, weight=j.prev_weight[-1])
-            nodes.append(i)
-        self.nodes.append(nodes)
+        #         G.add_edge(i, j, weight=round(j.prev_weight[-1], 5))
+        #     nodes.append(i)
+        # self.nodes.append(nodes)
 
         # connecting the deep layers together
         for i in range(n_layers-1):
@@ -109,8 +109,47 @@ class Network():
                     neuron1.next.append(neuron2)
                     neuron2.prev.append(neuron1)
                     neuron2.prev_weight.append(0.01 * abs(np.random.randn()))
+                    # G.add_edge(neuron1, neuron2,
+                    #            weight=round(neuron2.prev_weight[-1], 5))
+        # for layer in self.layers_deep:
+        #     nodes = []
+        #     for neuron in layer.neurons:
+        #         nodes.append(neuron)
+        #     self.nodes.append(nodes)
+
+        # connecting the final deep layer to the output layer
+        # nodes = []
+        for neuron in self.layers_deep[n_layers-1].neurons:
+            for outputNeuron in self.outputs.neurons:
+                neuron.next.append(outputNeuron)
+                outputNeuron.prev.append(neuron)
+                outputNeuron.prev_weight.append(0.01 * abs(np.random.randn()))
+                # G.add_edge(neuron, outputNeuron,
+                #            weight=round(outputNeuron.prev_weight[-1], 5))
+
+        # for outputNeuron in self.outputs.neurons:
+        #     nodes.append(outputNeuron)
+        # self.nodes.append(nodes)
+        # self.graph = G
+
+    def print(self):
+        G = nx.Graph()
+        self.nodes = []
+
+        # connecting the input to the first deep layer
+        nodes = []
+        for i in self.inputs.neurons:
+            for j in self.layers_deep[0].neurons:
+                G.add_edge(i, j, weight=round(j.prev_weight[-1], 5))
+            nodes.append(i)
+        self.nodes.append(nodes)
+
+        # connecting the deep layers together
+        for i in range(self.n_layers-1):
+            for neuron1 in self.layers_deep[i].neurons:
+                for neuron2 in self.layers_deep[i+1].neurons:
                     G.add_edge(neuron1, neuron2,
-                               weight=neuron2.prev_weight[-1])
+                               weight=round(neuron2.prev_weight[-1], 5))
         for layer in self.layers_deep:
             nodes = []
             for neuron in layer.neurons:
@@ -119,18 +158,28 @@ class Network():
 
         # connecting the final deep layer to the output layer
         nodes = []
-        for neuron in self.layers_deep[n_layers-1].neurons:
+        for neuron in self.layers_deep[self.n_layers-1].neurons:
             for outputNeuron in self.outputs.neurons:
-                neuron.next.append(outputNeuron)
-                outputNeuron.prev.append(neuron)
-                outputNeuron.prev_weight.append(0.01 * abs(np.random.randn()))
                 G.add_edge(neuron, outputNeuron,
-                           weight=outputNeuron.prev_weight[-1])
-
+                           weight=round(outputNeuron.prev_weight[-1], 5))
         for outputNeuron in self.outputs.neurons:
             nodes.append(outputNeuron)
         self.nodes.append(nodes)
+
         self.graph = G
+
+        nx.set_node_attributes(self.graph, 0, "layer")
+        count = 0
+        for layer in self.nodes:
+            count += 1
+            for neuron in layer:
+                self.graph.nodes[neuron]["layer"] = count
+
+        pos = nx.multipartite_layout(self.graph, subset_key="layer")
+        nx.draw(self.graph, pos, with_labels=False)
+        labels = nx.get_edge_attributes(self.graph, "weight")
+        nx.draw_networkx_edge_labels(self.graph, pos, labels)
+        plt.show()
 
     def forward(self, inputs):
         for idx, value in enumerate(inputs):
@@ -205,17 +254,18 @@ class Network():
 def main():
     pass
     x, y = sine.create_data()
-    b = Network(1, 2, 10, 1)
-    print(b.nodes)
-    nx.set_node_attributes(b.graph, 0, "layer")
-    count = 0
-    for layer in b.nodes:
-        count += 1
-        for neuron in layer:
-            b.graph.nodes[neuron]["layer"] = count
-    pos = nx.multipartite_layout(b.graph, subset_key="layer")
-    nx.draw(b.graph, pos, with_labels=False)
-    plt.show()
+    b = Network(1, 1, 10, 1)
+    b.print()
+    print("stage1", b.nodes)
+    # nx.set_node_attributes(b.graph, 0, "layer")
+    # count = 0
+    # for layer in b.nodes:
+    #     count += 1
+    #     for neuron in layer:
+    #         b.graph.nodes[neuron]["layer"] = count
+    # pos = nx.multipartite_layout(b.graph, subset_key="layer")
+    # nx.draw(b.graph, pos, with_labels=False)
+    # plt.show()
     b.forward([0.5])
     for neuron in b.outputs.neurons:
         print(neuron.prev_weight)
