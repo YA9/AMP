@@ -5,6 +5,10 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import math
 from nnfs.datasets import sine
+import time
+from copy import copy, deepcopy
+
+np.random.seed(1)
 
 
 # create neuron (Node)
@@ -49,6 +53,17 @@ class Layer():
                 np.dot(neuron.prev_weight, temp_vals) + neuron.bias, 0)
             temp_vals = []
 
+    def forward_none(self):
+        # calculate new neuron value
+        temp_vals = []
+        for neuron in self.neurons:
+            for prevNeuron in neuron.prev:
+                temp_vals.append(prevNeuron.val)
+
+            # none activation function in forward pass
+            neuron.val = np.dot(neuron.prev_weight, temp_vals) + neuron.bias
+            temp_vals = []
+
     def forward_softmax(self):
         temp_vals_per_neuron = []
         temp_vals_all_neurons = []
@@ -89,7 +104,7 @@ class Network():
             self.layers_deep.append(
                 Layer(n_layers_len, activation_function="relu"))
         # creating the output layer
-        self.outputs = Layer(n_outputs, activation_function="softmax")
+        self.outputs = Layer(n_outputs, activation_function="relu")
 
         # connecting the input to the first deep layer
         # nodes = []
@@ -179,17 +194,20 @@ class Network():
         nx.draw(self.graph, pos, with_labels=False)
         labels = nx.get_edge_attributes(self.graph, "weight")
         nx.draw_networkx_edge_labels(self.graph, pos, labels)
+        plt.pause(0.00001)
+        plt.ion()
         plt.show()
 
     def forward(self, inputs):
         for idx, value in enumerate(inputs):
             self.inputs.neurons[idx].val = value
         for layer in self.layers_deep:
-            layer.forward_relu()
-        self.outputs.forward_softmax()
+            layer.forward_none()
+        self.outputs.forward_none()
 
     def relu_derivative(self, val):
-        return (1 if val > 0 else 0)
+        # return (1 if val > 0 else 0)
+        return 1
 
     def softmax_derivative(self, val):
         return val * (1 - val)
@@ -206,14 +224,16 @@ class Network():
         errors = []
         for neuron, target_output in zip(self.outputs.neurons, target_outputs):
             errors.append(target_output - neuron.val)
+        # print(errors)
         for neuron, error in zip(self.outputs.neurons, errors):
             if self.outputs.activation_function == "relu":
                 neuron.delta = error * self.relu_derivative(neuron.val)
             elif self.outputs.activation_function == "softmax":
                 neuron.delta = error * self.softmax_derivative(neuron.val)
         # updating the weights of the output layer
-        for neuron in self.outputs.neurons:
-            neuron.prev_weight += -learning_rate * neuron.delta * neuron.val
+        for neuron_output, neuron_final_hidden in zip(self.outputs.neurons, self.layers_deep[-1].neurons):
+            neuron_output.prev_weight += learning_rate * \
+                neuron_output.delta * neuron_final_hidden.val
 
         # running the backward pass on the final deep layer
         errors = []
@@ -246,16 +266,23 @@ class Network():
                     neuron.delta = error * self.softmax_derivative(neuron.val)
 
         # updating the weights of the deep layers' neurons
-        for layer in self.layers_deep:
-            for neuron in layer.neurons:
-                neuron.prev_weight += -learning_rate * neuron.delta * neuron.val
+        for layer_idx, layer in enumerate(self.layers_deep):
+            if layer_idx < len(self.layers_deep) - 1:
+                for neuron, next_neuron in zip(layer.neurons, self.layers_deep[layer_idx+1]):
+                    neuron.prev_weight += learning_rate * neuron.delta * next_neuron.val
 
 
 def main():
     pass
-    x, y = sine.create_data()
-    b = Network(1, 1, 10, 1)
-    b.print()
+    # x, y = sine.create_data()
+    x = []
+    y = []
+    for i in np.linspace(0, 1, 100):
+        x.append([i])
+        y.append([-i])
+
+    b = Network(1, 1, 2, 1)
+    # b.print()
     print("stage1", b.nodes)
     # nx.set_node_attributes(b.graph, 0, "layer")
     # count = 0
@@ -267,21 +294,56 @@ def main():
     # nx.draw(b.graph, pos, with_labels=False)
     # plt.show()
     b.forward([0.5])
+    b.backward([-0.5], 0.01)
     for neuron in b.outputs.neurons:
-        print(neuron.prev_weight)
-        print(neuron.val)
+        print("prev weights", neuron.prev_weight)
+        print("val", neuron.val)
+        print("delta", neuron.delta)
     # b.backward([0], 1)
     # b.forward([0.2])
     # for neuron in b.outputs.neurons:
     #     print(neuron.prev_weight)
     #     print(neuron.val)
 
-    # for i in range(len(x)):
-    #     b.forward(x[i])
-    #     b.backward(y[i], 0.1)
+    for i in range(1000):
+        for i in range(len(x)):
+            # for i in range(10):
+            # if i % 50 == 0:
+            #     b.print()
+            b.forward(x[i])
+            b.backward(y[i], 1)
+
+    # for i in range(50):
+    #     # b.print()
+    #     # print(1)
+    #     b.forward([1])
+    #     b.backward([1], 1)
+
+    # for neuron in b.layers_deep[0].neurons:
+    #     print(neuron.delta)
+
+    # b.forward([0.5])
     # for neuron in b.outputs.neurons:
     #     print(neuron.prev_weight)
     #     print(neuron.val)
+    #     print(neuron.delta)
+
+    # b.forward([1])
+    # for neuron in b.outputs.neurons:
+    #     print(neuron.prev_weight)
+    #     print(neuron.val)
+    #     print(neuron.delta)
+
+    x = []
+    y = []
+    for i in np.linspace(0, 1, 100):
+        x.append(i)
+        b.forward([i])
+        y.append(deepcopy(b.outputs.neurons[0].val))
+    plt.scatter(x, y)
+    plt.show()
+    # print(x)
+    # print(y)
 
 
 if __name__ == '__main__':
