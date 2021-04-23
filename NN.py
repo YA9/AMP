@@ -202,12 +202,12 @@ class Network():
         for idx, value in enumerate(inputs):
             self.inputs.neurons[idx].val = value
         for layer in self.layers_deep:
-            layer.forward_none()
-        self.outputs.forward_none()
+            layer.forward_relu()
+        self.outputs.forward_relu()
 
     def relu_derivative(self, val):
-        # return (1 if val > 0 else 0)
-        return 1
+        return (1 if val > 0 else 0)
+        # return 1
 
     def softmax_derivative(self, val):
         return val * (1 - val)
@@ -269,27 +269,23 @@ class Network():
         for layer_idx, layer in enumerate(self.layers_deep):
             if layer_idx < len(self.layers_deep) - 1:
                 # for neuron, next_neuron in zip(layer.neurons, self.layers_deep[layer_idx+1].neurons):
-                for idx, neuron in enumerate(self.layers_deep[layer_idx+1].neurons):
+                for idx, neuron in enumerate(layer.neurons):
                     # neuron.prev_weight += learning_rate * neuron.delta * next_neuron.val
-                    delta = 0
-                    for next_idx, next_neuron in enumerate(self.layers_deep[layer_idx+2].neurons):
-                        delta += next_neuron.delta * \
-                            next_neuron.prev_weight[next_idx]
-
-                    for idx_weight, (weight, prev_neuron_val) in enumerate(zip(neuron.prev_weight, layer.neurons)):
-                        neuron.prev_weight[idx_weight] +=
+                    for next_idx, next_neuron in enumerate(self.layers_deep[layer_idx+1].neurons):
+                        next_neuron.prev_weight[idx] += learning_rate * \
+                            neuron.val * next_neuron.delta
 
 
 def main():
     pass
     x, y = sine.create_data()
-    x = []
-    y = []
-    for i in np.linspace(0, 1, 100):
-        x.append([i])
-        y.append([-i])
+    # x = []
+    # y = []
+    # for i in np.linspace(0, 1, 100):
+    #     x.append([i])
+    #     y.append([-i])
 
-    b = Network(1, 1, 10, 1)
+    b = Network(1, 3, 10, 1)
     # b.print()
     print("stage1", b.nodes)
     # nx.set_node_attributes(b.graph, 0, "layer")
@@ -313,7 +309,7 @@ def main():
     #     print(neuron.prev_weight)
     #     print(neuron.val)
 
-    for i in range(500):
+    for i in range(5000):
         for i in range(len(x)):
             # for i in range(10):
             # if i % 50 == 0:
