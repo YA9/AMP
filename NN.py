@@ -268,20 +268,28 @@ class Network():
         # updating the weights of the deep layers' neurons
         for layer_idx, layer in enumerate(self.layers_deep):
             if layer_idx < len(self.layers_deep) - 1:
-                for neuron, next_neuron in zip(layer.neurons, self.layers_deep[layer_idx+1]):
-                    neuron.prev_weight += learning_rate * neuron.delta * next_neuron.val
+                # for neuron, next_neuron in zip(layer.neurons, self.layers_deep[layer_idx+1].neurons):
+                for idx, neuron in enumerate(self.layers_deep[layer_idx+1].neurons):
+                    # neuron.prev_weight += learning_rate * neuron.delta * next_neuron.val
+                    delta = 0
+                    for next_idx, next_neuron in enumerate(self.layers_deep[layer_idx+2].neurons):
+                        delta += next_neuron.delta * \
+                            next_neuron.prev_weight[next_idx]
+
+                    for idx_weight, (weight, prev_neuron_val) in enumerate(zip(neuron.prev_weight, layer.neurons)):
+                        neuron.prev_weight[idx_weight] +=
 
 
 def main():
     pass
-    # x, y = sine.create_data()
+    x, y = sine.create_data()
     x = []
     y = []
     for i in np.linspace(0, 1, 100):
         x.append([i])
         y.append([-i])
 
-    b = Network(1, 1, 2, 1)
+    b = Network(1, 1, 10, 1)
     # b.print()
     print("stage1", b.nodes)
     # nx.set_node_attributes(b.graph, 0, "layer")
@@ -305,7 +313,7 @@ def main():
     #     print(neuron.prev_weight)
     #     print(neuron.val)
 
-    for i in range(1000):
+    for i in range(500):
         for i in range(len(x)):
             # for i in range(10):
             # if i % 50 == 0:
