@@ -234,6 +234,7 @@ class Network():
         for neuron_output, neuron_final_hidden in zip(self.outputs.neurons, self.layers_deep[-1].neurons):
             neuron_output.prev_weight += learning_rate * \
                 neuron_output.delta * neuron_final_hidden.val
+            neuron_output.bias += 0.001 * learning_rate * neuron_output.delta
 
         # running the backward pass on the final deep layer
         errors = []
@@ -274,18 +275,20 @@ class Network():
                     for next_idx, next_neuron in enumerate(self.layers_deep[layer_idx+1].neurons):
                         next_neuron.prev_weight[idx] += learning_rate * \
                             neuron.val * next_neuron.delta
+                        next_neuron.bias += 0.001 * learning_rate * neuron.delta
+                    # neuron.bias += learning_rate * neuron.delta
 
 
 def main():
     pass
     x, y = sine.create_data()
-    # x = []
-    # y = []
-    # for i in np.linspace(0, 1, 100):
-    #     x.append([i])
-    #     y.append([-i])
+    x = []
+    y = []
+    for i in np.linspace(0, 1, 100):
+        x.append([i])
+        y.append([i*i])
 
-    b = Network(1, 3, 10, 1)
+    b = Network(1, 2, 100, 1)
     # b.print()
     print("stage1", b.nodes)
     # nx.set_node_attributes(b.graph, 0, "layer")
@@ -297,25 +300,28 @@ def main():
     # pos = nx.multipartite_layout(b.graph, subset_key="layer")
     # nx.draw(b.graph, pos, with_labels=False)
     # plt.show()
-    b.forward([0.5])
-    b.backward([-0.5], 0.01)
-    for neuron in b.outputs.neurons:
-        print("prev weights", neuron.prev_weight)
-        print("val", neuron.val)
-        print("delta", neuron.delta)
+    # b.forward([0.5])
+    # b.backward([-0.5], 0.01)
+    # for neuron in b.outputs.neurons:
+    #     print("prev weights", neuron.prev_weight)
+    #     print("val", neuron.val)
+    #     print("delta", neuron.delta)
     # b.backward([0], 1)
     # b.forward([0.2])
     # for neuron in b.outputs.neurons:
     #     print(neuron.prev_weight)
     #     print(neuron.val)
 
-    for i in range(5000):
+    for i in range(3000):
         for i in range(len(x)):
             # for i in range(10):
             # if i % 50 == 0:
             #     b.print()
             b.forward(x[i])
-            b.backward(y[i], 1)
+            if i < 2000:
+                b.backward(y[i], 0.1)
+            else:
+                b.backward(y[i], 0.03)
 
     # for i in range(50):
     #     # b.print()
@@ -338,13 +344,14 @@ def main():
     #     print(neuron.val)
     #     print(neuron.delta)
 
-    x = []
-    y = []
+    X = []
+    Y = []
     for i in np.linspace(0, 1, 100):
-        x.append(i)
+        X.append(i)
         b.forward([i])
-        y.append(deepcopy(b.outputs.neurons[0].val))
-    plt.scatter(x, y)
+        Y.append(deepcopy(b.outputs.neurons[0].val))
+    plt.plot(X, Y)
+    plt.plot(x, y)
     plt.show()
     # print(x)
     # print(y)
