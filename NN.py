@@ -10,7 +10,7 @@ from copy import copy, deepcopy
 
 
 # Setting the seed to provide consistent results
-np.random.seed(1)
+# np.random.seed(1)
 
 
 class Node():
@@ -290,21 +290,23 @@ def main():
         x.append([i])
         y.append([0.25 * math.sin(i) + 0.5])
 
-    b = Network(1, 2, 10, 1)
+    b = Network(1, 10, 10, 1)
     # for neuron in b.outputs.neurons:
     #     for weight in neuron.prev_weight:
     #         print(id(weight))
-
     loss = []
+
     for i in range(1000):
-        print("Epoch: ", i)
+        # print("Epoch: ", i)
         error = []
+        lr = (1000 - i) / 1000
+        print(lr)
         for i in range(len(x)):
             # if i % 50 == 0:
             #     b.print()
             b.forward(x[i])
             if i < 1000:
-                b.backward(y[i], 1, 0.01)
+                b.backward(y[i], lr * 0.01, lr * 0.0005)
             elif i < 2000:
                 b.backward(y[i], 0.001, 0.0001)
             elif i < 6000:
@@ -334,7 +336,7 @@ def main():
             elif i < 20000:
                 b.backward(y[i], 1000, 0.0001)
             error.append(b.loss)
-        loss.append(np.sum(error))
+        loss.append(np.mean(error))
 
     X = []
     Y = []
@@ -371,9 +373,9 @@ $ = DONE
 $ clear neuron delta after each backward pass
 # Implement batch learning
 # implement dropout layers
-- implement normalization / preprocessing
-- implement dynamic learning rate
-- Comment code
-- fix print function
-- store loss and accuracy
+# implement normalization / preprocessing
+$ implement dynamic learning rate
+$ Comment code
+$ fix print function
+$ store loss and accuracy
 """
