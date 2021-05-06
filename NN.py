@@ -226,7 +226,7 @@ class Network():
         # running the backward pass on the output layer
         errors = []
         for neuron, target_output in zip(self.outputs.neurons, target_outputs):
-            errors.append(target_output - neuron.val)
+            errors.append((target_output - neuron.val))
             # print("error: ", errors[-1])
         for neuron, error in zip(self.outputs.neurons, errors):
             if self.outputs.activation_function == "relu":
@@ -240,7 +240,7 @@ class Network():
             neuron_output.bias += learning_rate_bias * neuron_output.delta
 
         # storing the network's loss (at current output)
-        self.loss = sum(errors)
+        self.loss = np.mean(errors)
 
         # running the backward pass on the final deep layer
         errors = []
@@ -286,11 +286,12 @@ def main():
     # x, y = sine.create_data()
     x = []
     y = []
-    for i in np.linspace(0, 2 * math.pi, 100):
+    for i in np.linspace(0, 1, 100):
         x.append([i])
-        y.append([0.25 * math.sin(i) + 0.5])
+        y.append([i*i])
+        # y.append([0.25 * math.sin(i) + 0.5])
 
-    b = Network(1, 10, 10, 1)
+    b = Network(1, 2, 15, 1)
     # for neuron in b.outputs.neurons:
     #     for weight in neuron.prev_weight:
     #         print(id(weight))
@@ -299,14 +300,14 @@ def main():
     for i in range(1000):
         # print("Epoch: ", i)
         error = []
-        lr = (1000 - i) / 1000
+        lr = (1500 - i) / 1500
         print(lr)
         for i in range(len(x)):
             # if i % 50 == 0:
             #     b.print()
             b.forward(x[i])
             if i < 1000:
-                b.backward(y[i], lr * 0.01, lr * 0.0005)
+                b.backward(y[i], lr*0.1, lr*0.0001)
             elif i < 2000:
                 b.backward(y[i], 0.001, 0.0001)
             elif i < 6000:
@@ -340,22 +341,30 @@ def main():
 
     X = []
     Y = []
-    for i in np.linspace(0, 2 * math.pi, 100):
+    for i in np.linspace(0, 1, 100):
         X.append(i)
         b.forward([i])
         Y.append(deepcopy(b.outputs.neurons[0].val))
-    plt.plot(X, Y)
-    plt.plot(x, y)
+    plt.plot(X, Y, label="Neural Network Output")
+    plt.plot(x, y, label="Training Data")
+    plt.title("Network Output vs Training Data")
+    plt.xlabel("Input")
+    plt.ylabel("Output")
+    plt.legend()
     plt.figure()
 
     b.print()
+    # plt.title("Neural Network Node Plot")
     # plt.figure()
 
     ax = plt.figure()
     ax = ax.add_subplot(1, 1, 1)
     line, = ax.plot(loss)
     # ax.set_yscale('log')
-    # plt.figure()
+    plt.title("Loss Over Epochs")
+    plt.xlabel("Epoch")
+    plt.ylabel("Loss")
+
     plt.show()
     # print(x)
     # print(y)
@@ -378,4 +387,5 @@ $ implement dynamic learning rate
 $ Comment code
 $ fix print function
 $ store loss and accuracy
+- fix print function getting slower over time
 """
